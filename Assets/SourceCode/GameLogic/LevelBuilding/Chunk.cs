@@ -25,41 +25,9 @@ public class Chunk : MonoBehaviour
 
     private void Awake()
     {
-        if ((TopPoint != null) && (bottomPoint != null))
-        {
-            maxY = TopPoint.transform.position.y;
-            minY = bottomPoint.transform.position.y;
-        }
-        else
-        {
-            FindDimensionsAutomaticly();            
-        }
+        maxY = TopPoint.transform.position.y;
+        minY = bottomPoint.transform.position.y;
         height = maxY - minY;
-    }
-
-    private void FindDimensionsAutomaticly()
-    {
-        if (transform.childCount <= 0) return;
-
-        float minY = float.MaxValue;
-        float maxY = float.MinValue;
-
-        foreach(Transform child in transform)
-        {
-            float bottomPointY = child.position.y - child.localScale.y / 2;
-            float topPointY = child.position.y + child.localScale.y / 2;
-            if (bottomPointY < minY)
-            {
-                minY = bottomPointY;
-            }
-            if (topPointY > maxY)
-            {
-                maxY = topPointY;
-            }
-        }
-
-        this.maxY = maxY;
-        this.minY = minY;
     }
 
     public float GetDistanceFromCenterToTop()

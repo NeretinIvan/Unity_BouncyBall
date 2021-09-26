@@ -9,13 +9,17 @@ public class WallBuilder : MonoBehaviour
     [SerializeField()] private GameObject chunksStorage;
     [SerializeField()] private GameObject firstChunk;
 
+    private TraceDrawer traceDrawer;
+    private ObstaclesRoot obstaclesRoot;
     private GameObject ball;
     private Vector3 startingBallPosition;
     private List<Chunk> chunksLoaded;
 
     private void Awake()
     {
-        ball = GameObject.FindObjectOfType<Ball>().gameObject;
+        traceDrawer = FindObjectOfType<TraceDrawer>();
+        ball = FindObjectOfType<Ball>().gameObject;
+        obstaclesRoot = FindObjectOfType<ObstaclesRoot>();
         startingBallPosition = ball.transform.position;
         chunksLoaded = new List<Chunk>();
     }
@@ -49,6 +53,7 @@ public class WallBuilder : MonoBehaviour
         }
 
         chunksLoaded.Add(chunkCreated.GetComponent<Chunk>());
+        chunkCreated.transform.SetParent(obstaclesRoot.transform);
         chunkCreated.SetActive(true);
     }
 
@@ -79,6 +84,7 @@ public class WallBuilder : MonoBehaviour
         if (chunksLoaded[chunksLoaded.Count - 1].TopPoint.transform.position.y - ball.transform.position.y <= buildChunkRange)
         {
             BuildChunk(PickChunk());
+            traceDrawer.RefreshObstacles();
         }
     }
 

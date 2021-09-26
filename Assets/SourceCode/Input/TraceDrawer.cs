@@ -41,14 +41,7 @@ public class TraceDrawer : MonoBehaviour
         currentPhysicsScene = currentScene.GetPhysicsScene2D();
 
         ClearTrace();
-        
-        foreach(Transform child in obstaclesRoot.transform)
-        {
-            GameObject staticLevelObject = Instantiate(child.gameObject);
-            SceneManager.MoveGameObjectToScene(staticLevelObject, predictionScene);
-            staticLevelObject.transform.position = child.position;
-        }
-        
+        RefreshObstacles();
     }
 
     //Don't remove this
@@ -88,5 +81,25 @@ public class TraceDrawer : MonoBehaviour
     public void ClearTrace()
     {
         traceLine.positionCount = 0;
+    }
+
+    public void RefreshObstacles()
+    {
+        DestroyObstaclesInPredictionScene();
+        foreach (Transform child in obstaclesRoot.transform)
+        {
+            GameObject levelObject = Instantiate(child.gameObject);
+            SceneManager.MoveGameObjectToScene(levelObject, predictionScene);
+            levelObject.transform.position = child.position;
+        }
+    }
+
+    private void DestroyObstaclesInPredictionScene()
+    {
+        GameObject[] rootObjects = predictionScene.GetRootGameObjects();
+        for (int i = 0; i < rootObjects.Length; i++)
+        {
+            Destroy(rootObjects[i]);
+        }
     }
 }

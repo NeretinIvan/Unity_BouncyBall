@@ -4,16 +4,11 @@ using UnityEngine;
 
 public class GameLogicController : MonoBehaviour
 {
-    //public event gameStarted;
+    private UI_Controller ui_controller;
 
-    void Start()
+    private void Awake()
     {
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        ui_controller = FindObjectOfType<UI_Controller>();
+        ui_controller.ShowScreen(UI_Controller.Screens.none);
     }
 }
