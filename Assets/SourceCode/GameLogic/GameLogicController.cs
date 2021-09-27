@@ -8,7 +8,11 @@ public class GameLogicController : MonoBehaviour
 
     private void Awake()
     {
-        ui_controller = FindObjectOfType<UI_Controller>();
+        ui_controller = FindObjectOfType<UI_Controller>();      
+    }
+
+    private void Start()
+    {
         ui_controller.ShowScreen(UI_Controller.Screens.none);
     }
 }

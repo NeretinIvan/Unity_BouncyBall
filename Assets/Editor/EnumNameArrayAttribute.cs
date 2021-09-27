@@ -3,28 +3,46 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
+//TODO: fix shifting references on adding new enum
 [CustomEditor(typeof(UI_Controller))]
 public class EnumNameArrayAttribute : Editor
 {
-    //TODO: fix shifting references on adding new enum
+    private SerializedProperty screensArrayProperty;
+    private SerializedObject mainScript;
+    private UI_Controller ui_Controller;
+
     public override void OnInspectorGUI()
     {
-        UI_Controller ui_Controller = (UI_Controller) target;
-        SerializedObject serializedObject = new SerializedObject(ui_Controller);
-        serializedObject.Update();
-        SerializedProperty screensArrayProperty = serializedObject.FindProperty(nameof(ui_Controller.screens));
-  
+        Init();
+        mainScript.Update();
+
         for (int i = 0; i < ui_Controller.screens.Length; i++)
         {
             string enumName = System.Enum.GetName(typeof(UI_Controller.Screens), i);
-            if (enumName == System.Enum.GetName(typeof(UI_Controller.Screens), UI_Controller.Screens.none))
+            if (NameIsEqualToEnum(enumName, UI_Controller.Screens.none))
             {
                 continue;
             }
-            SerializedProperty currentObject = screensArrayProperty.GetArrayElementAtIndex(i);
-            currentObject.objectReferenceValue = EditorGUILayout.ObjectField(enumName, currentObject.objectReferenceValue, typeof(UnityEngine.Object), true);
+            SetArrayField(i, enumName);
         }
 
-        serializedObject.ApplyModifiedProperties();
+        mainScript.ApplyModifiedProperties();
+    }
+
+    private void SetArrayField(int index, string caption)
+    {
+        ui_Controller.screens[index] = EditorGUILayout.ObjectField(caption, ui_Controller.screens[index], typeof(UnityEngine.Object), true) as GameObject;
+    }
+
+    private bool NameIsEqualToEnum(string name, UI_Controller.Screens screensEnum)
+    {
+        return name == System.Enum.GetName(typeof(UI_Controller.Screens), screensEnum);
+    }
+
+    private void Init()
+    {
+        ui_Controller = (UI_Controller)target;
+        mainScript = new SerializedObject(ui_Controller);
+        screensArrayProperty = mainScript.FindProperty(nameof(ui_Controller.screens));   
     }
 }

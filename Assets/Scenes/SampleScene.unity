@@ -593,7 +593,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   screens:
-  - {fileID: 234906342}
+  - {fileID: 0}
   - {fileID: 0}
 --- !u!1 &234906342
 GameObject:

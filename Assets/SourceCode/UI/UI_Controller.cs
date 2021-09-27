@@ -10,13 +10,28 @@ public class UI_Controller : MonoBehaviour
         GameOver,
         none
     }
-    [SerializeField()] public GameObject[] screens;
+    [SerializeField()] 
+    public GameObject[] screens = new GameObject[System.Enum.GetValues(typeof(Screens)).Length];
+
+
 
     private void Awake()
     {
-        int enumMembers = System.Enum.GetValues(typeof(Screens)).Length;
-        screens = new GameObject[enumMembers];
+        FindObjectOfType<PauseController>().pauseGame += ShowGameOver;
+        FindObjectOfType<PauseController>().resumeGame += ClearAll;
     }
+
+    private void ShowGameOver()
+    {
+        ShowScreen(Screens.GameOver);
+    }
+
+    private void ClearAll()
+    {
+        ShowScreen(Screens.none);
+    }
+
+
 
     public void ShowScreen(Screens screen)
     {
@@ -29,6 +44,7 @@ public class UI_Controller : MonoBehaviour
         {
             foreach(GameObject memberScreen in screens)
             {
+                if (memberScreen == null) continue;
                 memberScreen.SetActive(false);
             }
         }
@@ -36,6 +52,5 @@ public class UI_Controller : MonoBehaviour
 
         int enumNumber = System.Convert.ToInt32(showingScreen);
         screens[enumNumber].SetActive(true);
-
     }
 }
