@@ -7,17 +7,35 @@ public class DeathWall : MonoBehaviour
     [Min(0)] [SerializeField()] private float maxDistanceFromCamera = 1;
     [Tooltip("Time, in which wall stands still before move on, in seconds")]
     [Min(0)] [SerializeField()] private float cooldownTime = 2;
-    [Min(0)] [SerializeField()] private float speed = 2;
+    [Min(0)] [SerializeField()] private float baseSpeed = 2;
+    [Min(0)] [SerializeField()] private float maxSpeed = 2;
+    [Tooltip("Each new level of difficulty speed of wall will increase by this number")]
+    [Min(0)] [SerializeField] private float speedRiseValue;
 
+    private Vector3 startingPosition;
     private float cooldownRemaining;
-
-    private float cooldownMultiplayer = 1;
-    private float speedMultiplayer = 1;
+    private float currentSpeed;
 
     private void Awake()
     {
-        Vector3 ballPosition = GameObject.FindObjectOfType<Ball>().transform.position;
-        transform.position = new Vector3(ballPosition.x, transform.position.y, transform.position.z);
+        Vector3 ballPosition = FindObjectOfType<Ball>().transform.position;
+        startingPosition = new Vector3(ballPosition.x, transform.position.y, transform.position.z);
+        currentSpeed = baseSpeed;
+
+        FindObjectOfType<GameLogicController>().OnGameStarted += DeathWall_OnGameStarted;
+        FindObjectOfType<GameLogicController>().OnDifficultyUpdate += DeathWall_OnDifficultyUpdate;
+        gameObject.SetActive(false);
+    }
+
+    private void DeathWall_OnDifficultyUpdate(object sender, GameLogicController.DifficultyUpdateEventArgs e)
+    {
+        currentSpeed = Mathf.Min(baseSpeed + speedRiseValue * (e.Difficulty - 1), maxSpeed);
+    }
+
+    private void DeathWall_OnGameStarted(object sender, System.EventArgs e)
+    {
+        gameObject.SetActive(true);
+        transform.position = startingPosition;
     }
 
     public void OnCollisionEnter2D(Collision2D collision)
@@ -58,7 +76,7 @@ public class DeathWall : MonoBehaviour
         {
             transform.position = new Vector3(
             transform.position.x,
-            transform.position.y + speed * Time.deltaTime,
+            transform.position.y + currentSpeed * Time.deltaTime,
             transform.position.z);
         }       
     }

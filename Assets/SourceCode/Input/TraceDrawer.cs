@@ -10,9 +10,9 @@ public class TraceDrawer : MonoBehaviour
     [SerializeField] [Min(0)] private int maxIterations = 50;
     [Tooltip("Increasing will make trace longer at cost of lane accuracy. Performance will not be decreased")]
     [SerializeField] [Min(1)] private float stepKoef = 1;
+    [SerializeField] private List<GameObject> obstacleRootsWatchList;
 
     private GameObject tracingObject;
-    private GameObject obstaclesRoot;
     private GameObject simulatingObject;
     private Rigidbody2D tracingObjectRigidbody;
 
@@ -22,26 +22,43 @@ public class TraceDrawer : MonoBehaviour
     private PhysicsScene2D predictionPhysicsScene;
     private LineRenderer traceLine;
 
-    void Awake()
+    private void Awake()
     {
-        traceLine = GetComponent<LineRenderer>();
-        obstaclesRoot = FindObjectOfType<ObstaclesRoot>().gameObject;
-        tracingObject = FindObjectOfType<Ball>().gameObject;
-        tracingObjectRigidbody = tracingObject.GetComponent<Rigidbody2D>();
+        Init();
+        foreach (WallBuilder wallBuilder in FindObjectsOfType<WallBuilder>())
+        {
+            wallBuilder.OnChunkCreated += WallBuilder_OnChunkCreated;
+        }
+        ClearTrace();
     }
 
-    void Start()
+    private void Init()
     {
+        traceLine = GetComponent<LineRenderer>();
+        tracingObject = FindObjectOfType<Ball>().gameObject;
+        tracingObjectRigidbody = tracingObject.GetComponent<Rigidbody2D>();
+        obstacleRootsWatchList = new List<GameObject>();
+
         CreateSceneParameters parameters = new CreateSceneParameters(LocalPhysicsMode.Physics2D);
         predictionScene = SceneManager.CreateScene("predictionScene", parameters);
+        
         predictionPhysicsScene = predictionScene.GetPhysicsScene2D();
         Physics2D.autoSimulation = false;
 
         currentScene = SceneManager.GetActiveScene();
         currentPhysicsScene = currentScene.GetPhysicsScene2D();
+    }
 
-        ClearTrace();
-        RefreshObstacles();
+    private void WallBuilder_OnChunkCreated(object sender, WallBuilder.ChunkCreatedEventArgs e)
+    {
+        GameObject obstacleRootClone = Instantiate(e.createdChunk.gameObject);
+        obstacleRootClone.transform.position = e.createdChunk.transform.position;
+        if (obstacleRootClone.TryGetComponent(out MeshRenderer renderer))
+        {
+            renderer.enabled = false;
+        }
+        e.createdChunk.mirrorClone = obstacleRootClone;
+        SceneManager.MoveGameObjectToScene(obstacleRootClone, predictionScene);
     }
 
     //Don't remove this
@@ -81,25 +98,5 @@ public class TraceDrawer : MonoBehaviour
     public void ClearTrace()
     {
         traceLine.positionCount = 0;
-    }
-
-    public void RefreshObstacles()
-    {
-        DestroyObstaclesInPredictionScene();
-        foreach (Transform child in obstaclesRoot.transform)
-        {
-            GameObject levelObject = Instantiate(child.gameObject);
-            SceneManager.MoveGameObjectToScene(levelObject, predictionScene);
-            levelObject.transform.position = child.position;
-        }
-    }
-
-    private void DestroyObstaclesInPredictionScene()
-    {
-        GameObject[] rootObjects = predictionScene.GetRootGameObjects();
-        for (int i = 0; i < rootObjects.Length; i++)
-        {
-            Destroy(rootObjects[i]);
-        }
     }
 }

@@ -10,19 +10,34 @@ public class Ball : MonoBehaviour
     [HideInInspector()] public bool gameOver;
     private Rigidbody2D ballRigidbody;
     [SerializeField] private GameObject progressControllerObject;
-    //private ProgressController progressController;
+
+    GameLogicController gameLogicController;
+
+    private Vector3 startingPosition;
+    private float maxHeight;
 
     private void Awake()
     {
         ballRigidbody = GetComponent<Rigidbody2D>();
-        //progressController = progressControllerObject.GetComponent<ProgressController>();
+        gameLogicController = FindObjectOfType<GameLogicController>();
         Initialize();
+
+        gameLogicController.OnGameStarted += GameLogicController_OnGameStarted;
+    }
+
+    private void GoToStart()
+    {
+        transform.position = startingPosition;
+        ballRigidbody.velocity = Vector2.zero;
+        ballRigidbody.angularVelocity = 0;
     }
 
     public void Initialize()
     {
         chargingAllowed = true;
         gameOver = false;
+        startingPosition = transform.position;
+        maxHeight = startingPosition.y;
     }
 
     public void OnCollisionEnter2D(Collision2D collision)
@@ -38,14 +53,19 @@ public class Ball : MonoBehaviour
             chargingAllowed = false;
             BallFailed();
         }
+
+        if (transform.position.y > maxHeight)
+        {
+            maxHeight = transform.position.y;
+            gameLogicController.SetScore(Mathf.CeilToInt(maxHeight - startingPosition.y));
+        }
     }
 
     public void BallFailed()
     {
         gameOver = true;
         chargingAllowed = false;
-        Debug.Log("ball failed");
-        //progressController.AdmitFail();
+        gameLogicController.GameOver();
     }
 
     public void ChargeBall(Vector3 direction, float force)
@@ -54,5 +74,16 @@ public class Ball : MonoBehaviour
         chargingAllowed = false;
         direction = Vector3.Normalize(direction);
         ballRigidbody.AddForce(direction * force, ForceMode2D.Impulse);
+    }
+
+    private void OnDestroy()
+    {
+        gameLogicController.OnGameStarted -= GameLogicController_OnGameStarted;
+    }
+
+    private void GameLogicController_OnGameStarted(object sender, System.EventArgs e)
+    {
+        GoToStart();
+        Initialize();
     }
 }

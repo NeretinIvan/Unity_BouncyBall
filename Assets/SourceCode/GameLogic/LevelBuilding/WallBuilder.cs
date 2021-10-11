@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class WallBuilder : MonoBehaviour
 {
@@ -8,9 +9,15 @@ public class WallBuilder : MonoBehaviour
     [SerializeField()] private float buildChunkRange;
     [SerializeField()] private GameObject chunksStorage;
     [SerializeField()] private GameObject firstChunk;
+    [SerializeField()] private GameObject obstaclesRoot;
+
+    public event EventHandler<ChunkCreatedEventArgs> OnChunkCreated;
+    public class ChunkCreatedEventArgs
+    {
+        public Chunk createdChunk { get; set; }
+    }
 
     private TraceDrawer traceDrawer;
-    private ObstaclesRoot obstaclesRoot;
     private GameObject ball;
     private Vector3 startingBallPosition;
     private List<Chunk> chunksLoaded;
@@ -19,14 +26,16 @@ public class WallBuilder : MonoBehaviour
     {
         traceDrawer = FindObjectOfType<TraceDrawer>();
         ball = FindObjectOfType<Ball>().gameObject;
-        obstaclesRoot = FindObjectOfType<ObstaclesRoot>();
-        startingBallPosition = ball.transform.position;
+        FindObjectOfType<GameLogicController>().OnGameStarted += WallBuilder_OnGameStarted;
+
         chunksLoaded = new List<Chunk>();
+        startingBallPosition = ball.transform.position;
+        OnChunkCreated += WallBuilder_OnChunkCreated;
     }
 
-    void Start()
+    private void WallBuilder_OnChunkCreated(object sender, ChunkCreatedEventArgs e)
     {
-        BuildChunk(firstChunk.GetComponent<Chunk>());
+        chunksLoaded.Add(e.createdChunk);
     }
 
     void Update()
@@ -35,26 +44,13 @@ public class WallBuilder : MonoBehaviour
         CheckDisappearingChunks();
     }
 
-    private void BuildChunk(Chunk chunkPrototype)
+    private void BuildChunk(Chunk chunkPrototype, float Ycoord)
     {
         GameObject chunkCreated = Instantiate(chunkPrototype.gameObject);
-        if (chunksLoaded.Count == 0)
-        {
-            chunkCreated.transform.position = ball.transform.position;
-        }
-        else
-        {
-            Chunk latestChunk = chunksLoaded[chunksLoaded.Count - 1];
-            float addY = latestChunk.GetDistanceFromCenterToTop() + chunkPrototype.GetDistanceFromCenterToBottom();
-            chunkCreated.transform.position = new Vector3(
-                startingBallPosition.x, 
-                latestChunk.transform.position.y + addY, 
-                startingBallPosition.z);
-        }
-
-        chunksLoaded.Add(chunkCreated.GetComponent<Chunk>());
+        chunkCreated.transform.position = new Vector3(startingBallPosition.x, Ycoord, startingBallPosition.z);
         chunkCreated.transform.SetParent(obstaclesRoot.transform);
         chunkCreated.SetActive(true);
+        OnChunkCreated.Invoke(this, new ChunkCreatedEventArgs { createdChunk = chunkCreated.GetComponent<Chunk>() });
     }
 
     private void CheckDisappearingChunks()
@@ -64,7 +60,8 @@ public class WallBuilder : MonoBehaviour
         Chunk removeChunk = null;
         foreach(Chunk chunk in chunksLoaded)
         {
-            if (ball.transform.position.y - chunk.TopPoint.transform.position.y >= destroyChunkRange)
+            if ((ball.transform.position.y - chunk.TopPoint.transform.position.y >= destroyChunkRange) ||
+                (chunk.BottomPoint.transform.position.y - ball.transform.position.y >= destroyChunkRange))
             {
                 removeChunk = chunk;
                 break;
@@ -81,17 +78,34 @@ public class WallBuilder : MonoBehaviour
     {
         if (chunksLoaded.Count == 0) return;
 
-        if (chunksLoaded[chunksLoaded.Count - 1].TopPoint.transform.position.y - ball.transform.position.y <= buildChunkRange)
+        Chunk latestChunk = chunksLoaded[chunksLoaded.Count - 1];
+        if (latestChunk.TopPoint.transform.position.y - ball.transform.position.y <= buildChunkRange)
         {
-            BuildChunk(PickChunk());
-            traceDrawer.RefreshObstacles();
+            Chunk prototype = PickChunk();
+            BuildChunk(prototype, latestChunk.TopPoint.transform.position.y + prototype.GetDistanceFromCenterToBottom());
         }
     }
 
     private Chunk PickChunk()
     {
-        int chunkNumber = Random.Range(0, chunksStorage.transform.childCount);
+        int chunkNumber = UnityEngine.Random.Range(0, chunksStorage.transform.childCount);
         Chunk pickedChunk = chunksStorage.transform.GetChild(chunkNumber).GetComponent<Chunk>();
         return pickedChunk;
+    }
+
+    private void DestroyAllChunks()
+    {
+        Chunk[] chunks = obstaclesRoot.transform.GetComponentsInChildren<Chunk>();
+        for (int i = 0; i < chunks.Length; i++)
+        {
+            Destroy(chunks[i].gameObject);
+        }
+        chunksLoaded = new List<Chunk>();
+    }
+
+    private void WallBuilder_OnGameStarted(object sender, System.EventArgs e)
+    {
+        DestroyAllChunks();
+        BuildChunk(firstChunk.GetComponent<Chunk>(), startingBallPosition.y);
     }
 }

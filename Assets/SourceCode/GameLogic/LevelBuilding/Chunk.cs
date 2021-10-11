@@ -4,9 +4,11 @@ using UnityEngine;
 
 public class Chunk : MonoBehaviour
 {
-    [HideInInspector()] public float height { get; private set; }
-    
-    [SerializeField()] private GameObject topPoint;
+    [Min(0)] public int appearsOnDifficulty = 0;
+    [HideInInspector] public float height { get; private set; }
+    [HideInInspector] public GameObject mirrorClone;
+
+    [SerializeField] private GameObject topPoint;
     public GameObject TopPoint
     {
         get { return topPoint; }
@@ -38,5 +40,18 @@ public class Chunk : MonoBehaviour
     public float GetDistanceFromCenterToBottom()
     {
         return transform.position.y - bottomPoint.transform.position.y;
+    }
+
+    public float GetHeight()
+    {
+        return GetDistanceFromCenterToTop() + GetDistanceFromCenterToBottom();
+    }
+
+    private void OnDestroy()
+    {
+        if (mirrorClone != null)
+        {
+            Destroy(mirrorClone);
+        }
     }
 }

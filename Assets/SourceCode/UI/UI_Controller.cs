@@ -1,56 +1,78 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
+[System.Serializable]
 public class UI_Controller : MonoBehaviour
 {
-    public enum Screens
+    public enum ScreenType
     {
-        //MainMenu,
+        MainMenu,
         GameOver,
-        none
+        none,
+        ScoreLabel
     }
-    [SerializeField()] 
-    public GameObject[] screens = new GameObject[System.Enum.GetValues(typeof(Screens)).Length];
 
+    [System.Serializable]
+    public class Screen
+    {
+        public ScreenType type;
+        public GameObject rootObject;
+    }
 
+    [Min(0)][SerializeField] private int maxDisplayedScore;
+    [SerializeField] private Text scoreTextLabel;
+    [SerializeField] private Text gameOverScoreLabel;
+    public List<Screen> screens;
 
     private void Awake()
     {
-        FindObjectOfType<PauseController>().pauseGame += ShowGameOver;
-        FindObjectOfType<PauseController>().resumeGame += ClearAll;
+        GameLogicController gameLogicController = FindObjectOfType<GameLogicController>();
+        gameLogicController.OnScoreUpdate += GameLogicController_OnScoreUpdate;
+        gameLogicController.OnGameOver += GameLogicController_OnGameOver;
+        gameLogicController.OnGameStarted += GameLogicController_OnGameStarted;
     }
 
-    private void ShowGameOver()
-    {
-        ShowScreen(Screens.GameOver);
-    }
-
-    private void ClearAll()
-    {
-        ShowScreen(Screens.none);
-    }
-
-
-
-    public void ShowScreen(Screens screen)
+    public void ShowScreen(ScreenType screen)
     {
         ShowScreen(screen, true);
     }
 
-    public void ShowScreen(Screens showingScreen, bool hideOtherScreens)
+    public void ShowScreen(ScreenType showingScreen, bool hideOtherScreens)
     {
-        if (hideOtherScreens)
+        foreach (Screen memberScreen in screens)
         {
-            foreach(GameObject memberScreen in screens)
-            {
-                if (memberScreen == null) continue;
-                memberScreen.SetActive(false);
-            }
-        }
-        if (showingScreen == Screens.none) return;
+            if (memberScreen == null) continue;
+            if (memberScreen.rootObject == null) continue;
 
-        int enumNumber = System.Convert.ToInt32(showingScreen);
-        screens[enumNumber].SetActive(true);
+            if(memberScreen.type == showingScreen)
+            {
+                memberScreen.rootObject.SetActive(true);
+            }
+            else if (hideOtherScreens)
+            {
+                memberScreen.rootObject.SetActive(false);
+            }          
+        }
+    }
+
+    private void GameLogicController_OnScoreUpdate(object sender, GameLogicController.ScoreUpdateEventArgs e)
+    {
+        scoreTextLabel.text = Mathf.Min(e.Score, maxDisplayedScore).ToString();
+    }
+
+    private void GameLogicController_OnGameOver(object sender, GameLogicController.GameOverEventArgs e)
+    {
+        ShowScreen(ScreenType.GameOver);
+        gameOverScoreLabel.text = e.Score.ToString();
+        FindObjectOfType<PauseController>().PauseGame();
+    }
+
+    private void GameLogicController_OnGameStarted(object sender, System.EventArgs e)
+    {
+        ShowScreen(ScreenType.none);
+        ShowScreen(ScreenType.ScoreLabel);
+        FindObjectOfType<PauseController>().ResumeGame();
     }
 }

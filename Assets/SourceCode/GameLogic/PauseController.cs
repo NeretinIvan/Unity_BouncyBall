@@ -1,45 +1,40 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class PauseController : MonoBehaviour
 {
-    public event PauseGameDelegate pauseGame;
-    public event ResumeGameDelegate resumeGame;
-    public delegate void PauseGameDelegate();
-    public delegate void ResumeGameDelegate();
+    public event EventHandler<EventArgs> OnPauseGame;
+    public event EventHandler<EventArgs> OnResumeGame;
+
     public bool GamePaused { get; private set; } = false;
 
     private void Awake()
     {
-        pauseGame += PauseGame;
-        resumeGame += ResumeGame;
+        OnPauseGame += PauseController_pauseGame;
+        OnResumeGame += PauseController_resumeGame;
     }
 
-    void Update()
+    private void PauseController_resumeGame(object sender, EventArgs e)
     {
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            if (GamePaused)
-            {
-                resumeGame.Invoke();
-            }
-            else
-            {
-                pauseGame.Invoke();
-            }
-        }
+        Time.timeScale = 1;
+        GamePaused = false;
     }
 
-    private void PauseGame()
+    private void PauseController_pauseGame(object sender, EventArgs e)
     {
         Time.timeScale = 0;
         GamePaused = true;
     }
 
-    private void ResumeGame()
+    public void PauseGame()
     {
-        Time.timeScale = 1;
-        GamePaused = false;
+        OnPauseGame.Invoke(this, new EventArgs());
+    }
+
+    public void ResumeGame()
+    {
+        OnResumeGame.Invoke(this, new EventArgs());
     }
 }
