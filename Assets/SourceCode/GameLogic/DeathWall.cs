@@ -24,7 +24,16 @@ public class DeathWall : MonoBehaviour
 
         FindObjectOfType<GameLogicController>().OnGameStarted += DeathWall_OnGameStarted;
         FindObjectOfType<GameLogicController>().OnDifficultyUpdate += DeathWall_OnDifficultyUpdate;
+        FindObjectOfType<ColorController>().OnPaletteChange += DeathWall_OnPaletteChange;
         gameObject.SetActive(false);
+    }
+
+    private void DeathWall_OnPaletteChange(object sender, ColorController.OnPaletteChangeEventArgs e)
+    {
+        Material deathWallMaterial = GetComponent<MeshRenderer>().material;
+        deathWallMaterial.color = e.palette.lavaColor;
+        Light deathWallLight = GetComponentInChildren<Light>();
+        deathWallLight.color = e.palette.lavaColor;
     }
 
     private void DeathWall_OnDifficultyUpdate(object sender, GameLogicController.DifficultyUpdateEventArgs e)

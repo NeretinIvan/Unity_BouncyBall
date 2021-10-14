@@ -12,6 +12,7 @@ public class Ball : MonoBehaviour
     [SerializeField] private GameObject progressControllerObject;
 
     GameLogicController gameLogicController;
+    ColorController colorController;
 
     private Vector3 startingPosition;
     private float maxHeight;
@@ -20,9 +21,18 @@ public class Ball : MonoBehaviour
     {
         ballRigidbody = GetComponent<Rigidbody2D>();
         gameLogicController = FindObjectOfType<GameLogicController>();
+        colorController = FindObjectOfType<ColorController>();
         Initialize();
 
         gameLogicController.OnGameStarted += GameLogicController_OnGameStarted;
+        colorController.OnPaletteChange += Ball_OnPaletteChange;
+    }
+
+    private void Ball_OnPaletteChange(object sender, ColorController.OnPaletteChangeEventArgs e)
+    {
+        TrailRenderer trailRenderer = GetComponent<TrailRenderer>();
+        trailRenderer.startColor = e.palette.ballTraceColor;
+        trailRenderer.endColor = e.palette.ballTraceColor;
     }
 
     private void GoToStart()
@@ -79,6 +89,7 @@ public class Ball : MonoBehaviour
     private void OnDestroy()
     {
         gameLogicController.OnGameStarted -= GameLogicController_OnGameStarted;
+        colorController.OnPaletteChange -= Ball_OnPaletteChange;
     }
 
     private void GameLogicController_OnGameStarted(object sender, System.EventArgs e)

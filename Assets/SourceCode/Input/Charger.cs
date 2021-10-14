@@ -8,6 +8,7 @@ public class Charger : MonoBehaviour
     [SerializeField] private InputHandler.InputType inputType;
     [SerializeField] [Min(0)] private float strengthKoef = 0.001f;
     [SerializeField] [Min(0)] private float maxStrength = 100f;
+    [SerializeField] [Range(0, 1)] private float slowTimeKoef = 1f;
 
     private InputHandler inputHandler;
     private Ball ballComponent;
@@ -41,6 +42,7 @@ public class Charger : MonoBehaviour
         strength = 0;
         direction = Vector3.zero;
         chargeLineDrawer.Activate();
+        FindObjectOfType<PauseController>().SlowTime(slowTimeKoef);
     }
 
     private void ChargingEnded(Vector2 touchPosition)
@@ -54,6 +56,7 @@ public class Charger : MonoBehaviour
         charging = false;
         traceDrawer.ClearTrace();
         chargeLineDrawer.Deactivate();
+        FindObjectOfType<PauseController>().RemoveSlowTime();
     }
 
     private void OnCharging(Vector2 touchPosition)

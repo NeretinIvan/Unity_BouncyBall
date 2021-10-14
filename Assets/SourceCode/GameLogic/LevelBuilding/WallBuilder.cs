@@ -12,19 +12,18 @@ public class WallBuilder : MonoBehaviour
     [SerializeField()] private GameObject obstaclesRoot;
 
     public event EventHandler<ChunkCreatedEventArgs> OnChunkCreated;
+
     public class ChunkCreatedEventArgs
     {
         public Chunk createdChunk { get; set; }
     }
 
-    private TraceDrawer traceDrawer;
     private GameObject ball;
     private Vector3 startingBallPosition;
     private List<Chunk> chunksLoaded;
 
     private void Awake()
     {
-        traceDrawer = FindObjectOfType<TraceDrawer>();
         ball = FindObjectOfType<Ball>().gameObject;
         FindObjectOfType<GameLogicController>().OnGameStarted += WallBuilder_OnGameStarted;
 
