@@ -32,8 +32,8 @@ public class DeathWall : MonoBehaviour
     {
         Material deathWallMaterial = GetComponent<MeshRenderer>().material;
         deathWallMaterial.color = e.palette.lavaColor;
-        Light deathWallLight = GetComponentInChildren<Light>();
-        deathWallLight.color = e.palette.lavaColor;
+        //Light deathWallLight = GetComponentInChildren<Light>();
+        //deathWallLight.color = e.palette.lavaColor;
     }
 
     private void DeathWall_OnDifficultyUpdate(object sender, GameLogicController.DifficultyUpdateEventArgs e)

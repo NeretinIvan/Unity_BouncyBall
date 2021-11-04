@@ -5,9 +5,9 @@ using UnityEngine;
 [System.Serializable]
 public class ColorPalette
 {
-    public Color ballTraceColor;
-    public Color glowingObstaclesColor;
-    public Color lavaColor;
+    [ColorUsage(true, true)] public Color ballTraceColor;
+    [ColorUsage(true, true)] public Color glowingObstaclesColor;
+    [ColorUsage(true, true)] public Color lavaColor;
     public Color wallsColor;
     public Color backWallColor;
     public IntRange appearsInDifficulty;

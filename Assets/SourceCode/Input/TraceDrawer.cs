@@ -41,7 +41,7 @@ public class TraceDrawer : MonoBehaviour
 
         CreateSceneParameters parameters = new CreateSceneParameters(LocalPhysicsMode.Physics2D);
         predictionScene = SceneManager.CreateScene("predictionScene", parameters);
-        
+
         predictionPhysicsScene = predictionScene.GetPhysicsScene2D();
         Physics2D.autoSimulation = false;
 
@@ -53,9 +53,13 @@ public class TraceDrawer : MonoBehaviour
     {
         GameObject obstacleRootClone = Instantiate(e.createdChunk.gameObject);
         obstacleRootClone.transform.position = e.createdChunk.transform.position;
-        if (obstacleRootClone.TryGetComponent(out MeshRenderer renderer))
+        foreach (MeshRenderer renderer in obstacleRootClone.GetComponentsInChildren<MeshRenderer>())
         {
-            renderer.enabled = false;
+            Destroy(renderer);
+        }
+        foreach (ColorizedElement colorizedElement in obstacleRootClone.GetComponentsInChildren<ColorizedElement>())
+        {
+            Destroy(colorizedElement);
         }
         e.createdChunk.mirrorClone = obstacleRootClone;
         SceneManager.MoveGameObjectToScene(obstacleRootClone, predictionScene);
